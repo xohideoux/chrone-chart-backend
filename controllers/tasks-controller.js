@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { Task } = require('../models/');
+const { Parser } = require('json2csv');
 const ApiError = require('../handlers/api-error');
 
 class TaskController {
@@ -98,9 +99,55 @@ class TaskController {
 
     try {
       await task.destroy();
-      return res.json({message: "Task deleted"})
+      return res.json({ message: "Task deleted" })
     } catch (err) {
       return next(ApiError.internal('Error deleting task'));
+    }
+  }
+
+  async getReport(req, res, next) {
+    let { dateFrom, dateTo, format = 'json' } = req.query;
+
+    let where = {};
+
+    if (dateFrom) {
+      const startDate = new Date(dateFrom);
+      if (isNaN(startDate.getTime())) {
+        return next(ApiError.badRequest("Invalid dateFrom format"));
+      }
+      where.createdAt = { ...where.createdAt, [Op.gte]: startDate };
+    }
+
+    if (dateTo) {
+      const endDate = new Date(dateTo);
+      if (isNaN(endDate.getTime())) {
+        return next(ApiError.badRequest("Invalid dateTo format"));
+      }
+      where.createdAt = { ...where.createdAt, [Op.lte]: endDate };
+    }
+
+    try {
+      const tasks = await Task.findAll({ where });
+      const reportData = tasks.map(task => ({
+        title: task.title,
+        deadline: task.deadline,
+        status: task.status,
+        creator: task.creator
+      }));
+
+      if (format === 'json') {
+        return res.json(reportData);
+      }
+
+      const json2csvParser = new Parser();
+      const csv = json2csvParser.parse(reportData);
+
+      res.header('Content-Type', 'text/csv');
+      res.attachment('tasks_report.csv');
+      return res.send(csv);
+
+    } catch (error) {
+      return next(ApiError.internal("Error generating report"));
     }
   }
 }
