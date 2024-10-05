@@ -16,7 +16,7 @@ class TaskController {
   }
 
   async delete(req, res) {
-
+    res.json('ok')
   }
 }
 
