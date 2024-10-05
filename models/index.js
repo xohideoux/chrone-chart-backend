@@ -5,6 +5,8 @@ const User = sequelize.define('user', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   email: { type: DataTypes.STRING, unique: true },
   password: { type: DataTypes.STRING },
+  activationToken: { type: DataTypes.STRING, unique: true },
+  isActivated: { type: DataTypes.BOOLEAN },
 });
 
 const UserRole = sequelize.define('userRole', {
