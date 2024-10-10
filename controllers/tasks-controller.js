@@ -1,17 +1,21 @@
 const { Op } = require('sequelize');
-const { Task } = require('../models/');
+const { Task, TaskStatus, User } = require('../models/');
 const { Parser } = require('json2csv');
 const ApiError = require('../handlers/api-error');
 
 class TaskController {
   async getAll(req, res, next) {
-    let { status, dateFrom, dateTo, page = 1, limit = 10 } = req.query;
+    let { status, dateFrom, dateTo, assignee, page = 1, limit = 12 } = req.query;
     let offset = (page - 1) * limit;
 
     let where = {};
 
     if (status) {
       where.status = status;
+    }
+
+    if (assignee) {
+      where.assignee = assignee;
     }
 
     try {
@@ -31,10 +35,32 @@ class TaskController {
         where.createdAt = { ...where.createdAt, [Op.lte]: endDate };
       }
 
-      const tasks = await Task.findAndCountAll({ where, limit, offset });
+      const tasks = await Task.findAndCountAll({
+        where,
+        limit,
+        offset,
+        attributes: ['id', 'title', 'description', 'deadline'],
+        include: [
+          {
+            model: TaskStatus,
+            attributes: ['id', 'label'],
+          },
+          {
+            model: User,
+            as: 'creatorUser',
+            attributes: ['id', 'email'],
+          },
+          {
+            model: User,
+            as: 'assigneeUser',
+            attributes: ['id', 'email'],
+          },
+        ],
+      });
 
       return res.json(tasks);
     } catch (error) {
+      console.log(error);
       return next(ApiError.internal("Error receiving tasks"));
     }
   }
@@ -148,6 +174,17 @@ class TaskController {
 
     } catch (error) {
       return next(ApiError.internal("Error generating report"));
+    }
+  }
+
+  async getStatuses(req, res, next) {
+    try {
+      const statuses = await TaskStatus.findAll();
+      return res.json(statuses);
+
+    } catch (error) {
+      console.log(error);
+      return next(ApiError.internal("Error receiving statuses"));
     }
   }
 }

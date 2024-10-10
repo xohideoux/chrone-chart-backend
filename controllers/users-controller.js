@@ -17,13 +17,27 @@ const generateJwt = (id, email, role) => {
 }
 
 class UserController {
+  async getAll(req, res, next) {
+
+    try {
+      const users = await User.findAll({
+        attributes: ['id', 'email'],
+      });
+      return res.json(users);
+
+    } catch (error) {
+      console.log(error);
+      return next(ApiError.internal("Error receiving users"));
+    }
+  }
+
   async register(req, res, next) {
-    
+
     let { email, password, role = USER_CODE } = req.body;
     if (!email || !password) {
       return next(ApiError.badRequest('Email and password are required'));
     }
-    
+
     const candidate = await User.findOne({ where: { email } });
     if (candidate) {
       return next(ApiError.badRequest('Email already registered'));
@@ -32,7 +46,7 @@ class UserController {
     const hashPassword = await bcrypt.hash(password, 6);
     const activationToken = uuidv4();
     await User.create({ email, password: hashPassword, role, activationToken, isActivated: false });
-    
+
     const activationLink = `${process.env.API_URL}/api/users/activate/${activationToken}`;
 
     await MailService.sendActivationMail(email, activationLink);
@@ -81,7 +95,7 @@ class UserController {
 
   async checkAuth(req, res, next) {
     const user = await User.findByPk(req.user.id);
-  
+
     if (!user.isActivated) {
       return next(ApiError.forbidden('Account not activated. Please check your email for activation instructions.'));
     }
@@ -89,14 +103,6 @@ class UserController {
     const token = generateJwt(req.user.id, req.user.email, req.user.role);
 
     return res.json({ token })
-  }
-
-  async getAll(req, res) {
-
-  }
-
-  async getOne(req, res) {
-
   }
 }
 

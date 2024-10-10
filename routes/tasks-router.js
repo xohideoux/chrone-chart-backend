@@ -12,5 +12,6 @@ router.get('/report', controller.getReport);
 router.post('/create', handleAuth, controller.create);
 router.patch('/edit/:id', controller.edit);
 router.delete('/delete/:id', checkRole(ADMIN_CODE), controller.delete);
+router.get('/statuses/', controller.getStatuses);
 
 module.exports = router;

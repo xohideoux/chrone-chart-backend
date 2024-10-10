@@ -29,10 +29,10 @@ const TaskStatus = sequelize.define('taskStatus', {
 User.belongsTo(UserRole, { foreignKey: 'role' });
 UserRole.hasMany(User, { foreignKey: 'role' });
 
-Task.belongsTo(User, { foreignKey: 'creator' });
+Task.belongsTo(User, { foreignKey: 'creator', as: 'creatorUser' });
 User.hasMany(Task, { foreignKey: 'creator', as: 'createdTasks' });
 
-Task.belongsTo(User, { foreignKey: 'assignee' });
+Task.belongsTo(User, { foreignKey: 'assignee', as: 'assigneeUser' });
 User.hasMany(Task, { foreignKey: 'assignee', as: 'assignedTasks' });
 
 Task.belongsTo(TaskStatus, { foreignKey: 'status' });
@@ -40,5 +40,7 @@ TaskStatus.hasMany(Task, { foreignKey: 'status' });
 
 module.exports = {
   User,
+  UserRole,
   Task,
+  TaskStatus,
 };
