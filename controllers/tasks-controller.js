@@ -29,6 +29,10 @@ class TaskController {
 
       if (dateTo) {
         const endDate = new Date(dateTo);
+        endDate.setHours(23);
+        endDate.setMinutes(59);
+        endDate.setSeconds(59);
+
         if (isNaN(endDate.getTime())) {
           return next(ApiError.badRequest("Invalid dateTo format"));
         }
