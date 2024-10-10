@@ -191,6 +191,22 @@ class TaskController {
       return next(ApiError.internal("Error receiving statuses"));
     }
   }
+
+  async createStatus(req, res, next) {
+    const title = req.body.label;
+
+    if (!title) {
+      return next(ApiError.badRequest('Title is required'));
+    }
+
+    try {
+      const status = await TaskStatus.create(req.body);
+
+      return res.json({ status });
+    } catch (err) {
+      return next(ApiError.internal('Error creating status'));
+    }
+  }
 }
 
 module.exports = new TaskController();

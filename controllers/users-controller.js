@@ -4,7 +4,7 @@ const { where } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const MailService = require('../handlers/mail-service');
 const ApiError = require('../handlers/api-error');
-const { User } = require('../models/');
+const { User, UserRole } = require('../models/');
 const { USER_CODE } = require('../constants/');
 
 
@@ -103,6 +103,22 @@ class UserController {
     const token = generateJwt(req.user.id, req.user.email, req.user.role);
 
     return res.json({ token })
+  }
+
+  async createRole(req, res, next) {
+    const title = req.body.label;
+
+    if (!title) {
+      return next(ApiError.badRequest('Title is required'));
+    }
+
+    try {
+      const role = await UserRole.create(req.body);
+
+      return res.json({ role });
+    } catch (err) {
+      return next(ApiError.internal('Error creating role'));
+    }
   }
 }
 
