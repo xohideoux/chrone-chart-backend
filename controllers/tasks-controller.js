@@ -88,13 +88,15 @@ class TaskController {
   async create(req, res, next) {
     const title = req.body.title;
     const creator = req.user.id;
+    const status = req.body.status || 1;
+    const assignee = req.body.assignee || req.user.id;
 
     if (!title) {
       return next(ApiError.badRequest('Title is required'));
     }
 
     try {
-      const newTask = { ...req.body, creator }
+      const newTask = { ...req.body, creator, assignee, status }
       const task = await Task.create(newTask);
 
       return res.json({ task });
