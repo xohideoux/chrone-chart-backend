@@ -6,7 +6,7 @@ const ApiError = require('../handlers/api-error');
 class TaskController {
   async getAll(req, res, next) {
     let { status, dateFrom, dateTo, assignee, page = 1, limit = 12 } = req.query;
-    let offset = (page - 1) * limit;
+    let offset = (page - 1) * limit; // Calculate offset for pagination
 
     let where = {};
 
@@ -39,25 +39,26 @@ class TaskController {
         where.createdAt = { ...where.createdAt, [Op.lte]: endDate };
       }
 
+      // Fetch tasks with specified filters and pagination
       const tasks = await Task.findAndCountAll({
         where,
         limit,
         offset,
-        attributes: ['id', 'title', 'description', 'deadline'],
+        attributes: ['id', 'title', 'description', 'deadline'], // Specify fields to retrieve
         include: [
           {
             model: TaskStatus,
-            attributes: ['id', 'label'],
+            attributes: ['id', 'label'], // Include status
           },
           {
             model: User,
             as: 'creatorUser',
-            attributes: ['id', 'email'],
+            attributes: ['id', 'email'], // Include creator
           },
           {
             model: User,
             as: 'assigneeUser',
-            attributes: ['id', 'email'],
+            attributes: ['id', 'email'], // Include assignee
           },
         ],
       });
@@ -87,9 +88,9 @@ class TaskController {
 
   async create(req, res, next) {
     const title = req.body.title;
-    const creator = req.user.id;
-    const status = req.body.status || 1;
-    const assignee = req.body.assignee || req.user.id;
+    const creator = req.user.id; // Get creator's user ID from the authenticated user
+    const status = req.body.status || 1; // Status = new if not provided
+    const assignee = req.body.assignee || req.user.id; // Creator as assignee if not provided
 
     if (!title) {
       return next(ApiError.badRequest('Title is required'));
@@ -140,6 +141,7 @@ class TaskController {
   async getReport(req, res, next) {
     let { dateFrom, dateTo, format = 'json' } = req.query;
 
+    // Filter Tasks
     let where = {};
 
     if (dateFrom) {
@@ -167,15 +169,16 @@ class TaskController {
         creator: task.creator
       }));
 
+      // Return report in requested format (JSON or CSV)
       if (format === 'json') {
         return res.json(reportData);
       }
 
       const json2csvParser = new Parser();
-      const csv = json2csvParser.parse(reportData);
+      const csv = json2csvParser.parse(reportData); // Convert report data to CSV
 
       res.header('Content-Type', 'text/csv');
-      res.attachment('tasks_report.csv');
+      res.attachment('tasks_report.csv'); // Set filename for download
       return res.send(csv);
 
     } catch (error) {

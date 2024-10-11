@@ -13,8 +13,10 @@ class MailService {
     })
   }
 
+  // Method to send activation email
   async sendActivationMail(to, link) {
     try {
+      // Sending the email using the transporter
       await this.transporter.sendMail({
         from: process.env.SMTP_USER,
         to,

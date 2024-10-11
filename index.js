@@ -9,14 +9,16 @@ const handleError = require('./middleware/handle-error');
 const PORT = process.env.PORT;
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use('/api', router);
-app.use(handleError);
+// Middleware setup
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // Parse incoming JSON requests
+app.use('/api', router); // Mount the router on /api path
+app.use(handleError); // Use custom error handling middleware
 
 const start = async () => {
   try {
     await sequelize.authenticate();
+    // Sync all models with the database (create tables if they don't exist)
     await sequelize.sync();
 
     app.listen(PORT, () => console.log(`Server started on port ${PORT}`))
